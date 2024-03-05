@@ -1,0 +1,793 @@
+import '/auth/firebase_auth/auth_util.dart';
+import '/backend/backend.dart';
+import '/backend/firebase_storage/storage.dart';
+import '/flutter_flow/flutter_flow_checkbox_group.dart';
+import '/flutter_flow/flutter_flow_drop_down.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/flutter_flow/flutter_flow_widgets.dart';
+import '/flutter_flow/form_field_controller.dart';
+import '/flutter_flow/upload_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import 'profilemake_model.dart';
+export 'profilemake_model.dart';
+
+class ProfilemakeWidget extends StatefulWidget {
+  const ProfilemakeWidget({super.key});
+
+  @override
+  State<ProfilemakeWidget> createState() => _ProfilemakeWidgetState();
+}
+
+class _ProfilemakeWidgetState extends State<ProfilemakeWidget> {
+  late ProfilemakeModel _model;
+
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _model = createModel(context, () => ProfilemakeModel());
+
+    _model.usernameController ??= TextEditingController();
+    _model.usernameFocusNode ??= FocusNode();
+
+    _model.fullNameController ??= TextEditingController();
+    _model.fullNameFocusNode ??= FocusNode();
+
+    _model.phoneNumberController ??= TextEditingController();
+    _model.phoneNumberFocusNode ??= FocusNode();
+
+    _model.textController4 ??= TextEditingController();
+    _model.textFieldFocusNode ??= FocusNode();
+
+    _model.ageController ??= TextEditingController();
+    _model.ageFocusNode ??= FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _model.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _model.unfocusNode.canRequestFocus
+          ? FocusScope.of(context).requestFocus(_model.unfocusNode)
+          : FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        key: scaffoldKey,
+        backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
+        body: SafeArea(
+          top: true,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        FFLocalizations.of(context).getText(
+                          'u2pbco4z' /* Make your profile */,
+                        ),
+                        style: FlutterFlowTheme.of(context).headlineMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: FlutterFlowTheme.of(context).secondaryBackground,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Padding(
+                      padding: EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Text(
+                            FFLocalizations.of(context).getText(
+                              'd0kwra5n' /* Profile Photo */,
+                            ),
+                            style: FlutterFlowTheme.of(context).labelLarge,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(16),
+                            child: InkWell(
+                              splashColor: Colors.transparent,
+                              focusColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () async {
+                                final selectedMedia =
+                                    await selectMediaWithSourceBottomSheet(
+                                  context: context,
+                                  maxWidth: 300.00,
+                                  maxHeight: 175.00,
+                                  allowPhoto: true,
+                                );
+                                if (selectedMedia != null &&
+                                    selectedMedia.every((m) =>
+                                        validateFileFormat(
+                                            m.storagePath, context))) {
+                                  setState(() => _model.isDataUploading = true);
+                                  var selectedUploadedFiles =
+                                      <FFUploadedFile>[];
+
+                                  var downloadUrls = <String>[];
+                                  try {
+                                    selectedUploadedFiles = selectedMedia
+                                        .map((m) => FFUploadedFile(
+                                              name:
+                                                  m.storagePath.split('/').last,
+                                              bytes: m.bytes,
+                                              height: m.dimensions?.height,
+                                              width: m.dimensions?.width,
+                                              blurHash: m.blurHash,
+                                            ))
+                                        .toList();
+
+                                    downloadUrls = (await Future.wait(
+                                      selectedMedia.map(
+                                        (m) async => await uploadData(
+                                            m.storagePath, m.bytes),
+                                      ),
+                                    ))
+                                        .where((u) => u != null)
+                                        .map((u) => u!)
+                                        .toList();
+                                  } finally {
+                                    _model.isDataUploading = false;
+                                  }
+                                  if (selectedUploadedFiles.length ==
+                                          selectedMedia.length &&
+                                      downloadUrls.length ==
+                                          selectedMedia.length) {
+                                    setState(() {
+                                      _model.uploadedLocalFile =
+                                          selectedUploadedFiles.first;
+                                      _model.uploadedFileUrl =
+                                          downloadUrls.first;
+                                    });
+                                  } else {
+                                    setState(() {});
+                                    return;
+                                  }
+                                }
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/images/wall.jpg',
+                                  width: 300,
+                                  height: 175,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(16),
+                            child: TextFormField(
+                              controller: _model.usernameController,
+                              focusNode: _model.usernameFocusNode,
+                              obscureText: false,
+                              decoration: InputDecoration(
+                                labelText: FFLocalizations.of(context).getText(
+                                  'lvg3vfba' /* Username */,
+                                ),
+                                labelStyle:
+                                    FlutterFlowTheme.of(context).labelMedium,
+                                hintText: FFLocalizations.of(context).getText(
+                                  '77zqwix8' /* Enter your username */,
+                                ),
+                                hintStyle:
+                                    FlutterFlowTheme.of(context).bodyMedium,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                              ),
+                              style: FlutterFlowTheme.of(context).bodyLarge,
+                              validator: _model.usernameControllerValidator
+                                  .asValidator(context),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(16),
+                            child: TextFormField(
+                              controller: _model.fullNameController,
+                              focusNode: _model.fullNameFocusNode,
+                              onFieldSubmitted: (_) async {
+                                await currentUserReference!
+                                    .update(createUsersRecordData(
+                                  displayName: valueOrDefault<String>(
+                                    _model.fullNameController.text,
+                                    'none',
+                                  ),
+                                  phoneNumber: valueOrDefault<String>(
+                                    _model.phoneNumberController.text,
+                                    '000',
+                                  ),
+                                  photoUrl: _model.uploadedFileUrl,
+                                ));
+                              },
+                              obscureText: false,
+                              decoration: InputDecoration(
+                                labelText: FFLocalizations.of(context).getText(
+                                  'ilpp441v' /* Full Name */,
+                                ),
+                                labelStyle:
+                                    FlutterFlowTheme.of(context).labelMedium,
+                                hintText: FFLocalizations.of(context).getText(
+                                  'wp049s7w' /* Enter your full name */,
+                                ),
+                                hintStyle:
+                                    FlutterFlowTheme.of(context).bodyMedium,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                              ),
+                              style: FlutterFlowTheme.of(context).bodyLarge,
+                              validator: _model.fullNameControllerValidator
+                                  .asValidator(context),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(16),
+                            child: TextFormField(
+                              controller: _model.phoneNumberController,
+                              focusNode: _model.phoneNumberFocusNode,
+                              obscureText: false,
+                              decoration: InputDecoration(
+                                labelText: FFLocalizations.of(context).getText(
+                                  'ow0sjlb8' /* Phone Number */,
+                                ),
+                                labelStyle:
+                                    FlutterFlowTheme.of(context).labelMedium,
+                                hintText: FFLocalizations.of(context).getText(
+                                  'b44uqci8' /* Enter your phone number */,
+                                ),
+                                hintStyle:
+                                    FlutterFlowTheme.of(context).bodyMedium,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                              ),
+                              style: FlutterFlowTheme.of(context).bodyLarge,
+                              validator: _model.phoneNumberControllerValidator
+                                  .asValidator(context),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.all(16),
+                            child: TextFormField(
+                              controller: _model.textController4,
+                              focusNode: _model.textFieldFocusNode,
+                              obscureText: false,
+                              decoration: InputDecoration(
+                                labelText: FFLocalizations.of(context).getText(
+                                  'gl1lrew4' /* Bio or Description */,
+                                ),
+                                labelStyle:
+                                    FlutterFlowTheme.of(context).labelMedium,
+                                hintText: FFLocalizations.of(context).getText(
+                                  '51nui8jc' /* Tell us about yourself */,
+                                ),
+                                hintStyle:
+                                    FlutterFlowTheme.of(context).bodyMedium,
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: FlutterFlowTheme.of(context)
+                                        .primaryBackground,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Color(0x00000000),
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(40),
+                                ),
+                              ),
+                              style: FlutterFlowTheme.of(context).bodyLarge,
+                              validator: _model.textController4Validator
+                                  .asValidator(context),
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8),
+                                child: FlutterFlowDropDown<String>(
+                                  controller: _model.countryValueController ??=
+                                      FormFieldController<String>(
+                                    _model.countryValue ??=
+                                        FFLocalizations.of(context).getText(
+                                      's9zdvo8q' /* Select your country */,
+                                    ),
+                                  ),
+                                  options: [
+                                    FFLocalizations.of(context).getText(
+                                      '2q0znscs' /* Select your country */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      '1r8cnwr9' /* option 1 */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      'hhm0suv5' /* option 2 */,
+                                    )
+                                  ],
+                                  onChanged: (val) =>
+                                      setState(() => _model.countryValue = val),
+                                  width: 150,
+                                  height: 50,
+                                  textStyle:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                  hintText: FFLocalizations.of(context).getText(
+                                    'erhe3vyk' /* Select your country */,
+                                  ),
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    size: 24,
+                                  ),
+                                  fillColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 2,
+                                  borderColor: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                  borderWidth: 2,
+                                  borderRadius: 8,
+                                  margin: EdgeInsets.all(6),
+                                  hidesUnderline: true,
+                                  isOverButton: true,
+                                  isSearchable: false,
+                                  isMultiSelect: false,
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(8),
+                                child: FlutterFlowDropDown<String>(
+                                  controller: _model.cityValueController ??=
+                                      FormFieldController<String>(
+                                    _model.cityValue ??=
+                                        FFLocalizations.of(context).getText(
+                                      'qi78c97c' /* Select your city */,
+                                    ),
+                                  ),
+                                  options: [
+                                    FFLocalizations.of(context).getText(
+                                      '7c7vvsrg' /* Select your city */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      'umfsccti' /* option 1 */,
+                                    )
+                                  ],
+                                  onChanged: (val) =>
+                                      setState(() => _model.cityValue = val),
+                                  width: 150,
+                                  height: 50,
+                                  textStyle:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                  hintText: FFLocalizations.of(context).getText(
+                                    '8jks581x' /* Select your city */,
+                                  ),
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    size: 24,
+                                  ),
+                                  fillColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 2,
+                                  borderColor: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                  borderWidth: 2,
+                                  borderRadius: 8,
+                                  margin: EdgeInsets.all(6),
+                                  hidesUnderline: true,
+                                  isOverButton: true,
+                                  isSearchable: false,
+                                  isMultiSelect: false,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8),
+                                child: FlutterFlowDropDown<String>(
+                                  controller: _model.genderValueController ??=
+                                      FormFieldController<String>(
+                                    _model.genderValue ??=
+                                        FFLocalizations.of(context).getText(
+                                      '5pt76m2h' /* Select your gender */,
+                                    ),
+                                  ),
+                                  options: [
+                                    FFLocalizations.of(context).getText(
+                                      'oxwchp1q' /* Select your gender */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      'uhfen3mz' /* option 2 */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      '8ambaunw' /* option 3 */,
+                                    )
+                                  ],
+                                  onChanged: (val) =>
+                                      setState(() => _model.genderValue = val),
+                                  width: 150,
+                                  height: 50,
+                                  textStyle:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                  hintText: FFLocalizations.of(context).getText(
+                                    'xd7vings' /* Select your gender */,
+                                  ),
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    size: 24,
+                                  ),
+                                  fillColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 2,
+                                  borderColor: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                  borderWidth: 2,
+                                  borderRadius: 8,
+                                  margin: EdgeInsetsDirectional.fromSTEB(
+                                      16, 4, 16, 4),
+                                  hidesUnderline: true,
+                                  isOverButton: true,
+                                  isSearchable: false,
+                                  isMultiSelect: false,
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: TextFormField(
+                                    controller: _model.ageController,
+                                    focusNode: _model.ageFocusNode,
+                                    autofocus: true,
+                                    obscureText: false,
+                                    decoration: InputDecoration(
+                                      labelText:
+                                          FFLocalizations.of(context).getText(
+                                        'r8kpo35c' /* Age */,
+                                      ),
+                                      labelStyle: FlutterFlowTheme.of(context)
+                                          .labelMedium,
+                                      hintText:
+                                          FFLocalizations.of(context).getText(
+                                        '3ojzjgly' /* Enter your age */,
+                                      ),
+                                      hintStyle: FlutterFlowTheme.of(context)
+                                          .labelMedium,
+                                      enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primaryBackground,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .primary,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      errorBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .error,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      focusedErrorBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: FlutterFlowTheme.of(context)
+                                              .error,
+                                          width: 2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ),
+                                    style:
+                                        FlutterFlowTheme.of(context).bodyMedium,
+                                    keyboardType: TextInputType.number,
+                                    validator: _model.ageControllerValidator
+                                        .asValidator(context),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Expanded(
+                                child: FlutterFlowCheckboxGroup(
+                                  options: [
+                                    FFLocalizations.of(context).getText(
+                                      '667fwekt' /* Option 1 */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      'ete7cdl7' /* option 2 */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      'arkmtzoj' /* option 2 */,
+                                    )
+                                  ],
+                                  onChanged: (val) => setState(
+                                      () => _model.hobbiesValues = val),
+                                  controller: _model.hobbiesValueController ??=
+                                      FormFieldController<List<String>>(
+                                    [],
+                                  ),
+                                  activeColor:
+                                      FlutterFlowTheme.of(context).primary,
+                                  checkColor: FlutterFlowTheme.of(context).info,
+                                  checkboxBorderColor:
+                                      FlutterFlowTheme.of(context)
+                                          .secondaryText,
+                                  textStyle:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                  checkboxBorderRadius:
+                                      BorderRadius.circular(4),
+                                  initialized: _model.hobbiesValues != null,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8),
+                                child: FlutterFlowDropDown<String>(
+                                  controller:
+                                      _model.preferedgenreValueController ??=
+                                          FormFieldController<String>(
+                                    _model.preferedgenreValue ??=
+                                        FFLocalizations.of(context).getText(
+                                      'o529r0c1' /* What genre do you prefer? */,
+                                    ),
+                                  ),
+                                  options: [
+                                    FFLocalizations.of(context).getText(
+                                      'aonp93zk' /* What genre do you prefer? */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      'v4l3p0xv' /* option 2 */,
+                                    ),
+                                    FFLocalizations.of(context).getText(
+                                      '0wfhlktx' /* option 3 */,
+                                    )
+                                  ],
+                                  onChanged: (val) => setState(
+                                      () => _model.preferedgenreValue = val),
+                                  width: 300,
+                                  height: 50,
+                                  textStyle:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                  hintText: FFLocalizations.of(context).getText(
+                                    'skmoftb0' /* What genre do you prefer? */,
+                                  ),
+                                  icon: Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: FlutterFlowTheme.of(context)
+                                        .secondaryText,
+                                    size: 24,
+                                  ),
+                                  fillColor: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  elevation: 2,
+                                  borderColor: FlutterFlowTheme.of(context)
+                                      .primaryBackground,
+                                  borderWidth: 2,
+                                  borderRadius: 8,
+                                  margin: EdgeInsetsDirectional.fromSTEB(
+                                      16, 4, 16, 4),
+                                  hidesUnderline: true,
+                                  isOverButton: true,
+                                  isSearchable: false,
+                                  isMultiSelect: false,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(16, 16, 16, 16),
+                  child: FFButtonWidget(
+                    onPressed: () async {
+                      context.pushNamed('LIEBE_Perfil');
+
+                      await ProfilesRecord.createDoc(currentUserReference!)
+                          .set({
+                        ...createProfilesRecordData(
+                          bio: valueOrDefault<String>(
+                            _model.textController4.text,
+                            'Empty',
+                          ),
+                          age: valueOrDefault<int>(
+                            int.tryParse(_model.ageController.text),
+                            00,
+                          ),
+                          genre: valueOrDefault<String>(
+                            _model.genderValue,
+                            'non specific',
+                          ),
+                          preferedgenre: '',
+                          country: valueOrDefault<String>(
+                            _model.countryValue,
+                            'none',
+                          ),
+                          city: valueOrDefault<String>(
+                            _model.cityValue,
+                            'none',
+                          ),
+                          userUid: currentUserUid,
+                          userName: valueOrDefault<String>(
+                            _model.usernameController.text,
+                            'user',
+                          ),
+                        ),
+                        ...mapToFirestore(
+                          {
+                            'preferences': _model.hobbiesValues,
+                          },
+                        ),
+                      });
+                    },
+                    text: FFLocalizations.of(context).getText(
+                      'lg2cz4pd' /* Save and Continue */,
+                    ),
+                    options: FFButtonOptions(
+                      width: double.infinity,
+                      height: 50,
+                      padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                      iconPadding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 0),
+                      color: FlutterFlowTheme.of(context).primary,
+                      textStyle:
+                          FlutterFlowTheme.of(context).titleMedium.override(
+                                fontFamily: 'Readex Pro',
+                                color: Colors.white,
+                              ),
+                      elevation: 2,
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
