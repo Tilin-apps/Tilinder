@@ -69,9 +69,38 @@ const Profile: React.FC = () => {
   }, [birthdate.year, birthdate.month]);
 
   const handleSave = () => {
-    // Aquí puedes manejar la lógica de guardado
-    console.log(`Username: ${username}, Description: ${description}, Birthdate: ${birthdate.day}-${birthdate.month}-${birthdate.year}, Gender: ${gender}, Hobbies: ${Hobbies}`);
+    fetch('http://localhost:3000/profile', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username,
+        description,
+        birthdate: new Date(`${birthdate.year}-${birthdate.month}-${birthdate.day}`),
+        gender,
+        phoneNumber,
+        preferredGender,
+        hobbies: chips,
+        profilePhoto,
+      }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Error al guardar el perfil');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+      alert('Perfil guardado con éxito');
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      alert('Error al guardar el perfil');
+    });
   };
+  
   const handleExit = () => {
     setShowAlert(true);
   };
@@ -231,4 +260,3 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
-
